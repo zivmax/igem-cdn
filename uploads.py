@@ -324,7 +324,7 @@ class Session:
         Args:
             filename (str): The name of the file to delete.
             directory (str, optional): The parent directory of the file. Defaults to the root directory.
-            list_files (bool, optional): Whether to list files after deletion. Defaults to True.
+            output (bool, optional): Whether to list files after deletion. Defaults to True.
 
         Raises:
             Warning: If the deletion fails.
@@ -346,11 +346,12 @@ class Session:
         else:
             warnings.warn(f"'{os.path.join(directory, filename)}' delete failed")
 
-    def delete_dir(self, directory: str) -> None:
+    def delete_dir(self, directory: str, recursive: bool = False) -> None:
         """Delete a directory by deleting its contents.
 
         Args:
             directory (str): The directory to delete.
+            recursive (bool): Whether to delete subdirectories as well.
 
         Raises:
             Warning: If attempting to delete the root directory.
@@ -375,7 +376,7 @@ class Session:
             contents = self.query(current_dir, output=False)                
             for item in contents:
                 all_items.append((current_dir, item))
-                if item["Type"] == "Folder":
+                if item["Type"] == "Folder" and recursive:  # Only add to stack if recursive is True
                     stack.append(os.path.join(current_dir, item["Name"]))
 
         # Process all items with a single progress bar
@@ -383,12 +384,12 @@ class Session:
             total=len(all_items), desc="Deleting directory", unit="item"
         ) as pbar:
             for current_dir, item in all_items:
-                if item["Type"] != "Folder":
+                if item["Type"] != "Folder" or (item["Type"] == "Folder" and recursive):
                     self.delete(item["Name"], current_dir, False)
                     successful_deletions += 1
                 pbar.update(1)
-    
-        print (f"Deleted '{os.path.join(directory, "")}' with {successful_deletions} files\n")
+
+        print(f"Deleted '{os.path.join(directory, '')}' with {successful_deletions} files\n")
 
 
     def download_file(self, file_url: str, target_dir: str = "", output: bool = False) -> bool:
