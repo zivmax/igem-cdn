@@ -35,7 +35,6 @@ class Session:
     requests_session_instance = requests.session()
     status = NOT_LOGGED_IN
     team_id = ""
-    successful_downloads = 0
 
     def _request(
         self,
@@ -255,7 +254,7 @@ class Session:
         if directory == "":
             dir_path = path_to_dir.name
         else:
-            dir_path = directory + "/" + path_to_dir.name
+            dir_path = os.path.join(directory, path_to_dir.name)
         # multi-threading operating
         threads = []
         for filename in tqdm(file_list, desc="Uploading files", unit="file"):
@@ -270,7 +269,8 @@ class Session:
                 threads.append(thread)
             if (path_to_dir / filename).is_dir():
                 thread = threading.Thread(
-                    target=self.upload_dir, args=(f"{path_to_dir}/{filename}", dir_path)
+                    target=self.upload_dir,
+                    args=(f"{os.path.join(path_to_dir, filename)}", dir_path),
                 )
                 thread.start()
                 threads.append(thread)
@@ -306,7 +306,7 @@ class Session:
             if output:
                 print(os.path.join(directory, filename), "deleted")
         else:
-            warnings.warn(directory + "/" + filename + " delete failed")
+            warnings.warn(os.path.join(directory, filename) + " delete failed")
 
     def delete_dir(self, directory: str) -> None:
         """Delete a directory by deleting its contents.
@@ -356,7 +356,7 @@ class Session:
         print (f"Deleted {os.path.join(directory, "")} with {successful_deletions} files\n")
 
 
-    def download_file(self, file_url: str, target_dir: str = "") -> bool:
+    def download_file(self, file_url: str, target_dir: str = "", output: bool = False) -> bool:
         """Download a single file from a URL.
 
         Args:
@@ -395,6 +395,8 @@ class Session:
                 # save file
                 with open(file_path, "wb") as file:
                     file.write(response.content)
+                if output:
+                    print(f"Downloaded {file_url} to {file_path}")
                 return True
             else:
                 print(
@@ -431,7 +433,6 @@ class Session:
         self.query(directory)
         all_files = collect_files(directory, recursive)
 
-        directory = directory + "/" if not directory.endswith("/") else directory
         if not all_files:
             print(f"Directory '{directory}' is empty")
             return
@@ -468,4 +469,4 @@ class Session:
                 thread.join()
 
         directory = directory if directory != "" else "/"
-        print(f"Downloaded {self.successful_downloads} files in '{directory}'\n")
+        print(f"Downloaded {self.successful_downloads} files in '{os.path.join(directory, "")}'\n")
