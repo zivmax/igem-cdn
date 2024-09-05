@@ -112,6 +112,7 @@ class Session:
         """
         data = {"identifier": username, "password": password}
         try:
+            print("Logging in...")
             response = self.requests_session_instance.post(
                 "https://api.igem.org/v1/auth/sign-in", data=data
             )
@@ -186,10 +187,10 @@ class Session:
                     )
             if output:
                 print(table)
-                print(directory if directory != "" else "/", "found:", res["KeyCount"])
+                print(f"'{directory if directory != "" else "/"}' found: {res["KeyCount"]}")
             return contents
         elif res["KeyCount"] == 0:
-            print(directory if directory != "" else "/", "found: 0")
+            print(f"'{directory if directory != "" else "/"}'" , "found: 0")
             return []
         else:
             warnings.warn("Query failed")
@@ -231,12 +232,12 @@ class Session:
         )
         if res.status_code == 201:
             if output:
-                print(path_to_file.name, "uploaded", res.text)
+                print(f"'{path_to_file.name}' uploaded {res.text}")
             return res.text
         else:
-            warnings.warn("Upload failed" + res.text)
+            warnings.warn(f"Upload '{path_to_file.name}' failed {res.text}")
 
-    def upload_dir(self, local_dir: str, dest_dir: str = "", recursive: bool = True) -> list:
+    def upload_dir(self, local_dir: str, dest_dir: str = "", recursive: bool = False) -> list:
         """Upload the contents of a directory and its subdirectories to a specific directory.
 
         Args:
@@ -341,18 +342,15 @@ class Session:
         )
         if res.status_code == 200:
             if output:
-                print(os.path.join(directory, filename), "deleted")
+                print(f"'{os.path.join(directory, filename)}' deleted")
         else:
-            warnings.warn(os.path.join(directory, filename) + " delete failed")
+            warnings.warn(f"'{os.path.join(directory, filename)}' delete failed")
 
     def delete_dir(self, directory: str) -> None:
         """Delete a directory by deleting its contents.
 
         Args:
             directory (str): The directory to delete.
-
-        Returns:
-            list: A list of files remaining in the directory after truncation.
 
         Raises:
             Warning: If attempting to delete the root directory.
@@ -382,7 +380,7 @@ class Session:
 
         # Process all items with a single progress bar
         with tqdm(
-            total=len(all_items), desc="Truncating directory", unit="item"
+            total=len(all_items), desc="Deleting directory", unit="item"
         ) as pbar:
             for current_dir, item in all_items:
                 if item["Type"] != "Folder":
@@ -390,7 +388,7 @@ class Session:
                     successful_deletions += 1
                 pbar.update(1)
     
-        print (f"Deleted {os.path.join(directory, "")} with {successful_deletions} files\n")
+        print (f"Deleted '{os.path.join(directory, "")}' with {successful_deletions} files\n")
 
 
     def download_file(self, file_url: str, target_dir: str = "", output: bool = False) -> bool:
@@ -433,11 +431,11 @@ class Session:
                 with open(file_path, "wb") as file:
                     file.write(response.content)
                 if output:
-                    print(f"Downloaded {file_url} to {file_path}")
+                    print(f"Downloaded '{file_url}' to '{file_path}'")
                 return True
             else:
                 print(
-                    f"Failed to download {file_url}: Response Header {response.headers}"
+                    f"Failed to download '{file_url}': Response Header {response.headers}"
                 )
                 return False
         except requests.exceptions.RequestException as e:
@@ -488,7 +486,7 @@ class Session:
                     self.successful_downloads += 1
                     pbar.update(1)  # Update progress bar
             except Exception as e:
-                print(f"Error downloading {file_url}: {e}")
+                print(f"Error downloading '{file_url}': {e}")
 
         # Use tqdm to create a progress bar
         with tqdm(total=len(all_files), desc="Downloading files", unit="file") as pbar:
