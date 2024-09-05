@@ -162,8 +162,6 @@ class Session:
         res = response.json()
 
         if res["KeyCount"] > 0:
-            if output:
-                print(directory if directory != "" else "/", "found:", res["KeyCount"])
             contents = []
             if res.get("CommonPrefixes", False):
                 contents.extend(sorted(res["CommonPrefixes"], key=lambda x: x["Name"]))
@@ -188,9 +186,10 @@ class Session:
                     )
             if output:
                 print(table)
+                print(directory if directory != "" else "/", "found:", res["KeyCount"])
             return contents
         elif res["KeyCount"] == 0:
-            print(directory if directory != "" else "/", "found:", res["KeyCount"])
+            print(directory if directory != "" else "/", "found: 0")
             return []
         else:
             warnings.warn("Query failed")
