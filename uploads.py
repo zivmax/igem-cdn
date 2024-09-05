@@ -35,6 +35,7 @@ class Session:
     requests_session_instance = requests.session()
     status = NOT_LOGGED_IN
     team_id = ""
+    successful_downloads = 0
 
     def _request(
         self,
@@ -92,8 +93,8 @@ class Session:
         team_year = main_team["year"]
         team_role = main_membership["role"]
         team_role_status = main_membership["status"]
-        print("Your team:", team_id, team_name, team_year)
-        print("Your role:", team_role)
+        print("Team:", team_id, team_name, team_year)
+        print("Role:", team_role)
         if team_status != "accepted":
             warnings.warn("Your team is not accepted")
         if team_role_status != "accepted":
@@ -141,7 +142,14 @@ class Session:
             f"https://api.igem.org/v1/websites/teams/{self.team_id}",
             params={"directory": directory} if directory != "" else None,
         )
+
+        # Check if the request was successful
+        if response.status_code != 200:
+            warnings.warn(f"Query failed with status code: {response.status_code}.")
+            return []
+
         res = response.json()
+        
         if res["KeyCount"] > 0:
             if output:
                 print(directory if directory != "" else "/", "found:", res["KeyCount"])
@@ -175,7 +183,7 @@ class Session:
             return []
         else:
             warnings.warn("Query failed")
-            exit(1)
+            return []
 
     def upload(
         self, abs_file_path: str, directory: str = "", list_files: bool = True
@@ -327,7 +335,57 @@ class Session:
                 self.delete(item["Name"], directory, False)
         return self.query(directory)
 
-    def download_dir(self, directory: str = "", files_only: bool = True) -> None:
+    def download_file(self, file_url: str, target_dir: str = "") -> bool:
+        """Download a single file from a URL.
+
+        Args:
+            file_url (str): The URL of the file to download.
+            target_dir (str, optional): The target directory for saving the file. Defaults to the current directory.
+
+        Returns:
+            bool: True if the download was successful, False otherwise.
+        """
+        file_name = os.path.basename(file_url)  # get file name from url
+        file_path = os.path.join(target_dir, file_name)  # local file path
+
+        headers = {
+            "Host": "static.igem.wiki",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:129.0) Gecko/20100101 Firefox/129.0",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/png,image/svg+xml,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.5",
+            "Accept-Encoding": "gzip, deflate, br, zstd",
+            "Connection": "keep-alive",
+            "Upgrade-Insecure-Requests": "1",
+            "Sec-Fetch-Dest": "document",
+            "Sec-Fetch-Mode": "navigate",
+            "Sec-Fetch-Site": "cross-site",
+            "Priority": "u=0, i",
+            "Pragma": "no-cache",
+            "Cache-Control": "no-cache",
+            "TE": "trailers",
+        }
+
+        try:
+            response = requests.get(
+                file_url, headers=headers, timeout=10
+            )  # download file
+
+            if response.status_code == 200:
+                # save file
+                with open(file_path, "wb") as file:
+                    file.write(response.content)
+                self.successful_downloads += 1
+                return True
+            else:
+                print(
+                    f"Failed to download {file_url}: Response Header {response.headers}"
+                )
+                return False
+        except requests.exceptions.RequestException as e:
+            print(f"Request failed: {e}")
+            return False
+
+    def download_dir(self, directory: str = "", recursive: bool = False) -> None:
         """Download a directory and its subdirectories to the local file system.
 
         Args:
@@ -338,51 +396,52 @@ class Session:
             None: This function does not return a value.
         """
 
-        def download_single_file(file_url: str, target_dir: str = "") -> bool:
-            """Download a single file from a URL.
+        def collect_files(directory, recursive):
+            contents = self.query(directory, False)
+            if not contents:
+                return []
 
-            Args:
-                file_url (str): The URL of the file to download.
-                target_dir (str, optional): The target directory for saving the file. Defaults to the current directory.
+            file_list = []
+            for item in contents:
+                if item["Type"] == "Folder":
+                    if not recursive:
+                        file_list.extend(
+                            collect_files(
+                                item["Prefix"].split(f"teams/{self.team_id}/")[1],
+                                recursive,
+                            )
+                        )
+                else:
+                    file_list.append((item["Location"], directory))
+            return file_list
+        
+        self.successful_downloads = 0
+        directory = directory + "/" if not directory.endswith("/") else directory
+        self.query(directory)
+        all_files = collect_files(directory, recursive)
 
-            Returns:
-                bool: True if the download was successful, False otherwise.
-            """
-            file_name = os.path.basename(file_url)  # get file name from url
-            file_path = os.path.join(target_dir, file_name)  # local file path
-            response = requests.get(file_url)  # download file
-            if response.status_code == 200:
-                # save file
-                with open(file_path, "wb") as file:
-                    file.write(response.content)
-                return True
-            else:
-                return False
-
-        contents = self.query(directory, False)
-        if len(contents) == 0:
-            print(f"Directory {directory} is empty")
+        if not all_files:
+            print(f"Directory '{directory}' is empty")
             return
-        else:
-            local_target_directory = f"teams/{self.team_id}/{directory}"
+
+        for _, dir_path in all_files:
+            local_target_directory = f"static/{dir_path}"
             os.makedirs(local_target_directory, exist_ok=True)
-        # multi-threading operating
+
         threads = []
-        for item in tqdm(contents, desc="Downloading files", unit="file"):
-            if item["Type"] == "Folder":
-                if files_only:
-                    continue
-                self.download_dir(
-                    item["Prefix"].split(f"teams/{self.team_id}/")[1], files_only
-                )
-                continue
+        for file_url, dir_path in tqdm(
+            all_files, desc="Downloading files", unit="file"
+        ):
+            local_target_directory = f"static/{dir_path}"
             thread = threading.Thread(
-                target=download_single_file,
-                args=(item["Location"], local_target_directory),
+                target=self.download_file,
+                args=(file_url, local_target_directory),
             )
             thread.start()
             threads.append(thread)
+
         for thread in threads:
             thread.join()
+
         directory = directory if directory != "" else "/"
-        print(f"Downloaded {len(threads)} files in {directory}\n")
+        print(f"Downloaded {self.successful_downloads} files in '{directory}'\n")
