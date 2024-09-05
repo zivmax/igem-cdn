@@ -111,16 +111,28 @@ class Session:
             Warning: If the credentials are invalid.
         """
         data = {"identifier": username, "password": password}
-        response = self.requests_session_instance.post(
-            "https://api.igem.org/v1/auth/sign-in", data=data
-        )
-        if response.text.__contains__("Invalid credentials"):
+        try:
+            response = self.requests_session_instance.post(
+                "https://api.igem.org/v1/auth/sign-in", data=data
+            )
+            response.raise_for_status()  # Raises an HTTPError for bad responses (4xx and 5xx)
+
+            if "Invalid credentials" in response.text:
+                self.status = LOGIN_FAILED
+                warnings.warn("Invalid credentials")
+                exit(1)
+            else:
+                self.status = LOGGED_IN
+                self.team_id = self._request_team_id()
+
+        except requests.exceptions.HTTPError as http_err:
             self.status = LOGIN_FAILED
-            warnings.warn("Invalid credentials")
+            warnings.warn(f"HTTP error occurred: {http_err}")
             exit(1)
-        else:
-            self.status = LOGGED_IN
-            self.team_id = self._request_team_id()
+        except requests.exceptions.RequestException as req_err:
+            self.status = LOGIN_FAILED
+            warnings.warn(f"Request failed: {req_err}")
+            exit(1)
 
     def query(self, directory: str = "", output: bool = True) -> list:
         """Query files and directories in a specific directory.
