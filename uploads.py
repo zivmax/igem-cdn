@@ -149,7 +149,7 @@ class Session:
             return []
 
         res = response.json()
-        
+
         if res["KeyCount"] > 0:
             if output:
                 print(directory if directory != "" else "/", "found:", res["KeyCount"])
@@ -374,7 +374,6 @@ class Session:
                 # save file
                 with open(file_path, "wb") as file:
                     file.write(response.content)
-                self.successful_downloads += 1
                 return True
             else:
                 print(
@@ -386,15 +385,7 @@ class Session:
             return False
 
     def download_dir(self, directory: str = "", recursive: bool = False) -> None:
-        """Download a directory and its subdirectories to the local file system.
-
-        Args:
-            directory (str, optional): The directory to download. Defaults to the root directory.
-            files_only (bool, optional): Whether to download files only. Defaults to True.
-
-        Returns:
-            None: This function does not return a value.
-        """
+        """Download a directory and its subdirectories to the local file system."""
 
         def collect_files(directory, recursive):
             contents = self.query(directory, False)
@@ -414,12 +405,12 @@ class Session:
                 else:
                     file_list.append((item["Location"], directory))
             return file_list
-        
+
         self.successful_downloads = 0
-        directory = directory + "/" if not directory.endswith("/") else directory
         self.query(directory)
         all_files = collect_files(directory, recursive)
 
+        directory = directory + "/" if not directory.endswith("/") else directory
         if not all_files:
             print(f"Directory '{directory}' is empty")
             return
@@ -428,20 +419,32 @@ class Session:
             local_target_directory = f"static/{dir_path}"
             os.makedirs(local_target_directory, exist_ok=True)
 
-        threads = []
-        for file_url, dir_path in tqdm(
-            all_files, desc="Downloading files", unit="file"
-        ):
-            local_target_directory = f"static/{dir_path}"
-            thread = threading.Thread(
-                target=self.download_file,
-                args=(file_url, local_target_directory),
-            )
-            thread.start()
-            threads.append(thread)
+        # Create a lock for thread-safe updates
+        lock = threading.Lock()
 
-        for thread in threads:
-            thread.join()
+        def thread_download(file_url, dir_path):
+            try:
+                self.download_file(file_url, dir_path)
+                with lock:
+                    self.successful_downloads += 1
+                    pbar.update(1)  # Update progress bar
+            except Exception as e:
+                print(f"Error downloading {file_url}: {e}")
+
+        # Use tqdm to create a progress bar
+        with tqdm(total=len(all_files), desc="Downloading files", unit="file") as pbar:
+            threads = []
+            for file_url, dir_path in all_files:
+                local_target_directory = f"static/{dir_path}"
+                thread = threading.Thread(
+                    target=thread_download,
+                    args=(file_url, local_target_directory),
+                )
+                thread.start()
+                threads.append(thread)
+
+            for thread in threads:
+                thread.join()
 
         directory = directory if directory != "" else "/"
         print(f"Downloaded {self.successful_downloads} files in '{directory}'\n")
