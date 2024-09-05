@@ -279,7 +279,7 @@ class Session:
         return self.query(dir_path)
 
     def delete(
-        self, filename: str, directory: str = "", list_files: bool = True
+        self, filename: str, directory: str = "", output: bool = False
     ) -> None:
         """Delete a file in a specific directory.
 
@@ -303,37 +303,58 @@ class Session:
             params={"directory": directory} if directory != "" else None,
         )
         if res.status_code == 200:
-            print(directory + "/" + filename, "deleted")
-            print()
-            if list_files:
-                self.query(directory)
+            if output:
+                print(os.path.join(directory, filename), "deleted")
         else:
             warnings.warn(directory + "/" + filename + " delete failed")
 
-    def truncate_dir(self, directory: str) -> list:
-        """Truncate a directory by deleting its contents.
+    def delete_dir(self, directory: str) -> None:
+        """Delete a directory by deleting its contents.
 
         Args:
-            directory (str): The directory to truncate.
+            directory (str): The directory to delete.
 
         Returns:
             list: A list of files remaining in the directory after truncation.
 
         Raises:
-            Warning: If attempting to truncate the root directory.
+            Warning: If attempting to delete the root directory.
         """
         if directory == "":
             warnings.warn(
-                "Trying to truncate the root directory! Please specify a directory name instead."
+                "Trying to delete the root directory! Please specify a directory name instead."
             )
             exit(1)
-        contents = self.query(directory)
-        for item in tqdm(contents, desc="Truncating directory", unit="item"):
-            if item["Type"] == "Folder":
-                self.truncate_dir(directory + "/" + item["Name"])
-            else:
-                self.delete(item["Name"], directory, False)
-        return self.query(directory)
+
+        if len(self.query(directory, output=False)) == 0:
+            warnings.warn(f"Directory '{directory}' is empty")
+            return
+
+        stack = [directory]
+        all_items = []
+        successful_deletions = 0
+
+        # Collect all items first
+        while stack:
+            current_dir = stack.pop()
+            contents = self.query(current_dir, output=False)                
+            for item in contents:
+                all_items.append((current_dir, item))
+                if item["Type"] == "Folder":
+                    stack.append(os.path.join(current_dir, item["Name"]))
+
+        # Process all items with a single progress bar
+        with tqdm(
+            total=len(all_items), desc="Truncating directory", unit="item"
+        ) as pbar:
+            for current_dir, item in all_items:
+                if item["Type"] != "Folder":
+                    self.delete(item["Name"], current_dir, False)
+                    successful_deletions += 1
+                pbar.update(1)
+    
+        print (f"Deleted {os.path.join(directory, "")} with {successful_deletions} files\n")
+
 
     def download_file(self, file_url: str, target_dir: str = "") -> bool:
         """Download a single file from a URL.
