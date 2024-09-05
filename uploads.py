@@ -196,7 +196,7 @@ class Session:
             return []
 
     def upload(
-        self, abs_file_path: str, directory: str = "", list_files: bool = True
+        self, abs_file_path: str, directory: str = "", output: bool = False
     ) -> str:
         """Upload a file to a specific directory.
 
@@ -230,10 +230,8 @@ class Session:
             files=files,
         )
         if res.status_code == 201:
-            print(path_to_file.name, "uploaded", res.text)
-            print()
-            if list_files:
-                self.query(directory)
+            if output:
+                print(path_to_file.name, "uploaded", res.text)
             return res.text
         else:
             warnings.warn("Upload failed" + res.text)
