@@ -3,6 +3,7 @@ import os
 import threading
 import warnings
 from pathlib import Path
+from tqdm import tqdm  # Import tqdm for progress bars
 
 import prettytable as pt
 import requests
@@ -11,12 +12,10 @@ NOT_LOGGED_IN = 0
 LOGGED_IN = 1
 LOGIN_FAILED = -1
 
-
 def check_parameter(directory: str):
     if directory.startswith('/'):
         warnings.warn('You specified a directory name starting with \'/\', which may cause unknown errors')
         exit(1)
-
 
 def download_single_file(file_url: str, target_dir: str = ''):
     # get file name from url
@@ -34,7 +33,6 @@ def download_single_file(file_url: str, target_dir: str = ''):
         return True
     else:
         return False
-
 
 class Session:
     requests_session_instance = requests.session()
@@ -180,7 +178,7 @@ class Session:
             dir_path = directory + '/' + path_to_dir.name
         # multi-threading operating
         threads = []
-        for filename in file_list:
+        for filename in tqdm(file_list, desc="Uploading files", unit="file"):
             if filename.startswith('.'):
                 continue
             if (path_to_dir / filename).is_file():
@@ -229,7 +227,7 @@ class Session:
             warnings.warn('Trying to truncate the root directory! Please specify a directory name instead.')
             exit(1)
         contents = self.query(directory)
-        for item in contents:
+        for item in tqdm(contents, desc="Truncating directory", unit="item"):
             if item['Type'] == 'Folder':
                 self.truncate_dir(directory + '/' + item['Name'])
             else:
@@ -252,7 +250,7 @@ class Session:
             os.makedirs(local_target_directory, exist_ok=True)
         # multi-threading operating
         threads = []
-        for item in contents:
+        for item in tqdm(contents, desc="Downloading files", unit="file"):
             if item['Type'] == 'Folder':
                 if files_only:
                     continue
@@ -265,4 +263,4 @@ class Session:
         for thread in threads:
             thread.join()
         directory = directory if directory != '' else '/'
-        print(f'Download {len(threads)} files in {directory}\n')
+        print(f'Downloaded {len(threads)} files in {directory}\n')
