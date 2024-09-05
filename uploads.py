@@ -236,56 +236,84 @@ class Session:
         else:
             warnings.warn("Upload failed" + res.text)
 
-    def upload_dir(self, abs_path: str, directory: str = "") -> list:
-        """Upload a directory and its subdirectories to a specific directory.
+    def upload_dir(self, local_dir: str, dest_dir: str = "", recursive: bool = True) -> list:
+        """Upload the contents of a directory and its subdirectories to a specific directory.
 
         Args:
-            abs_path (str): Absolute path of the directory to upload.
-            directory (str, optional): The target directory. Defaults to the root directory.
-
-        Returns:
-            list: A list of files, each represented as a dictionary.
+            local_dir (str): Path of the directory to upload.
+            dest_dir (str, optional): The target directory. Defaults to the root directory.
+            recursive (bool, optional): Whether to upload subdirectories. Defaults to True.
 
         Raises:
             Warning: If the directory path is invalid.
         """
-        check_parameter(directory)
-        if directory == "/":
+        def collect_files_and_dirs(directory_path):
+            path_to_dir = Path(directory_path)
+            if not path_to_dir.is_dir():
+                return [], []
+
+            file_list = []
+            dir_list = []
+            for item in path_to_dir.iterdir():
+                if item.is_dir():
+                    dir_list.append(item)
+                    if recursive:  # Only collect subdirectories if recursive is True
+                        sub_files, sub_dirs = collect_files_and_dirs(item)
+                        file_list.extend(sub_files)
+                        dir_list.extend(sub_dirs)
+                elif not item.name.startswith("."):
+                    file_list.append(item)
+            return file_list, dir_list
+
+        check_parameter(dest_dir)
+        if dest_dir == "/":
             warnings.warn(
                 "You specified '/' as a directory name, which may cause unknown errors"
             )
             exit(1)
-        path_to_dir = Path(abs_path)
+        path_to_dir = Path(local_dir)
         if not path_to_dir.is_dir():
-            warnings.warn("Invalid directory path: " + abs_path)
+            warnings.warn(f"Invalid directory path: '{local_dir}'")
             exit(1)
-        file_list = os.listdir(abs_path)
-        if directory == "":
-            dir_path = path_to_dir.name
-        else:
-            dir_path = os.path.join(directory, path_to_dir.name)
-        # multi-threading operating
-        threads = []
-        for filename in tqdm(file_list, desc="Uploading files", unit="file"):
-            if filename.startswith("."):
-                continue
-            if (path_to_dir / filename).is_file():
+
+        all_files, all_dirs = collect_files_and_dirs(local_dir)
+
+        if not all_files and not all_dirs:
+            print(f"Directory '{local_dir}' is empty")
+            return []
+
+        lock = threading.Lock()
+
+        self.successful_uploads = 0
+        def thread_upload(file_path, remote_dir_path):
+            try:
+                self.upload(file_path, remote_dir_path, False)
+                with lock:
+                    self.successful_uploads += 1
+                    pbar.update(1)  # Update progress bar
+            except Exception as e:
+                print(f"Error uploading '{file_path}': {e}")
+
+        remote_base_dir = dest_dir if dest_dir else path_to_dir.name
+
+        # Use tqdm to create a progress bar
+        with tqdm(total=len(all_files), desc="Uploading files", unit="file") as pbar:
+            threads: list[threading.Thread] = []
+            for file_path in all_files:
+                relative_file_path = file_path.relative_to(local_dir)
+                remote_file_dir = os.path.join(remote_base_dir, relative_file_path.parent)
                 thread = threading.Thread(
-                    target=self.upload,
-                    args=(f"{path_to_dir}/{filename}", dir_path, False),
+                    target=thread_upload,
+                    args=(str(file_path), remote_file_dir),
                 )
                 thread.start()
                 threads.append(thread)
-            if (path_to_dir / filename).is_dir():
-                thread = threading.Thread(
-                    target=self.upload_dir,
-                    args=(f"{os.path.join(path_to_dir, filename)}", dir_path),
-                )
-                thread.start()
-                threads.append(thread)
-        for thread in threads:
-            thread.join()
-        return self.query(dir_path)
+
+            for thread in threads:
+                thread.join()
+
+        print(f"Uploaded {self.successful_uploads} files to '{os.path.join(dest_dir, '')}'\n")
+
 
     def delete(
         self, filename: str, directory: str = "", output: bool = False
