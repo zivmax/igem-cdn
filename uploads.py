@@ -12,7 +12,8 @@ NOT_LOGGED_IN = 0
 LOGGED_IN = 1
 LOGIN_FAILED = -1
 
-def check_parameter(directory: str):
+
+def check_parameter(directory: str) -> None:
     """Check if the directory parameter is valid.
 
     Args:
@@ -35,9 +36,14 @@ class Session:
     status = NOT_LOGGED_IN
     team_id = ""
 
-
-
-    def _request(self, method: str, url: str, params=None, data=None, files=None):
+    def _request(
+        self,
+        method: str,
+        url: str,
+        params: dict = None,
+        data: dict = None,
+        files: dict = None,
+    ) -> requests.Response:
         """Make an HTTP request to the specified URL.
 
         Args:
@@ -60,7 +66,7 @@ class Session:
             method=method, url=url, params=params, data=data, files=files
         )
 
-    def _request_team_id(self):
+    def _request_team_id(self) -> str:
         """Retrieve the team ID for the logged-in user.
 
         Returns:
@@ -94,7 +100,7 @@ class Session:
             warnings.warn("Your team role is not accepted")
         return team_id
 
-    def login(self, username: str, password: str):
+    def login(self, username: str, password: str) -> None:
         """Log in to the iGEM API.
 
         Args:
@@ -116,7 +122,7 @@ class Session:
             self.status = LOGGED_IN
             self.team_id = self._request_team_id()
 
-    def query(self, directory: str = "", output: bool = True):
+    def query(self, directory: str = "", output: bool = True) -> list:
         """Query files and directories in a specific directory.
 
         Args:
@@ -171,7 +177,9 @@ class Session:
             warnings.warn("Query failed")
             exit(1)
 
-    def upload(self, abs_file_path: str, directory: str = "", list_files: bool = True):
+    def upload(
+        self, abs_file_path: str, directory: str = "", list_files: bool = True
+    ) -> str:
         """Upload a file to a specific directory.
 
         Args:
@@ -212,7 +220,7 @@ class Session:
         else:
             warnings.warn("Upload failed" + res.text)
 
-    def upload_dir(self, abs_path: str, directory: str = ""):
+    def upload_dir(self, abs_path: str, directory: str = "") -> list:
         """Upload a directory and its subdirectories to a specific directory.
 
         Args:
@@ -262,7 +270,9 @@ class Session:
             thread.join()
         return self.query(dir_path)
 
-    def delete(self, filename: str, directory: str = "", list_files: bool = True):
+    def delete(
+        self, filename: str, directory: str = "", list_files: bool = True
+    ) -> None:
         """Delete a file in a specific directory.
 
         Args:
@@ -292,7 +302,7 @@ class Session:
         else:
             warnings.warn(directory + "/" + filename + " delete failed")
 
-    def truncate_dir(self, directory: str):
+    def truncate_dir(self, directory: str) -> list:
         """Truncate a directory by deleting its contents.
 
         Args:
@@ -317,7 +327,7 @@ class Session:
                 self.delete(item["Name"], directory, False)
         return self.query(directory)
 
-    def download_dir(self, directory: str = "", files_only: bool = True):
+    def download_dir(self, directory: str = "", files_only: bool = True) -> None:
         """Download a directory and its subdirectories to the local file system.
 
         Args:
@@ -328,7 +338,7 @@ class Session:
             None: This function does not return a value.
         """
 
-        def download_single_file(file_url: str, target_dir: str = ""):
+        def download_single_file(file_url: str, target_dir: str = "") -> bool:
             """Download a single file from a URL.
 
             Args:
