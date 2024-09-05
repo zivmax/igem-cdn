@@ -197,9 +197,9 @@ class Session:
             return []
 
     def upload(
-        self, abs_file_path: str, directory: str = "", output: bool = False
+        self, file_path: str, dest_dir: str = "", output: bool = False
     ) -> str:
-        """Upload a file to a specific directory.
+        """Upload a file to a specific remote path.
 
         Args:
             abs_file_path (str): Absolute path of the file to upload.
@@ -212,22 +212,22 @@ class Session:
         Raises:
             Warning: If the file path is invalid or the upload fails.
         """
-        check_parameter(directory)
-        if directory == "/":
+        check_parameter(dest_dir)
+        if dest_dir == "/":
             warnings.warn(
                 "You specified '/' as a directory name, which may cause unknown errors"
             )
             exit(1)
-        path_to_file = Path(abs_file_path)
+        path_to_file = Path(file_path)
         if not path_to_file.is_file():
-            warnings.warn("Invalid file path: " + abs_file_path)
+            warnings.warn("Invalid file path: " + file_path)
             exit(1)
-        mime_type = mimetypes.guess_type(abs_file_path, True)[0]
-        files = {"file": (path_to_file.name, open(abs_file_path, "rb"), mime_type)}
+        mime_type = mimetypes.guess_type(file_path, True)[0]
+        files = {"file": (path_to_file.name, open(file_path, "rb"), mime_type)}
         res = self._request(
             "POST",
             f"https://api.igem.org/v1/websites/teams/{self.team_id}",
-            params={"directory": directory} if directory != "" else None,
+            params={"directory": dest_dir} if dest_dir != "" else None,
             files=files,
         )
         if res.status_code == 201:
@@ -238,7 +238,7 @@ class Session:
             warnings.warn(f"Upload '{path_to_file.name}' failed {res.text}")
 
     def upload_dir(self, local_dir: str, dest_dir: str = "", recursive: bool = False) -> list:
-        """Upload the contents of a directory and its subdirectories to a specific directory.
+        """Upload the contents of a directory to a specific remote path.
 
         Args:
             local_dir (str): Path of the directory to upload.
