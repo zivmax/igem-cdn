@@ -199,7 +199,7 @@ class Session:
     def upload_file(
         self, file_path: str, dest_dir: str = "", output: bool = False
     ) -> str:
-        """Upload a file to a specific remote path.
+        """Upload a file to a specific remote directory.
 
         Args:
             abs_file_path (str): Absolute path of the file to upload.
