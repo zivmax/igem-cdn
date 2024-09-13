@@ -20,7 +20,7 @@ def download(client: Session, remote_path: str) -> None:
     """Download from remote without overwriting check."""
     # If it's a file
     if os.path.isfile(remote_path):
-        client.download_file(remote_path)
+        client.download_file(remote_path, True)
     # If it's a directory
     else:
         client.download_dir(remote_path, True)
@@ -29,8 +29,8 @@ def download(client: Session, remote_path: str) -> None:
 def upload(client: Session, local_path: str, remote_path: str) -> None:
     """Upload to remote without overwriting check."""
     # If it's a file
-    if os.path.isfile(remote_path):
-        client.upload_file(remote_path)
+    if os.path.isfile(local_path):
+        client.upload_file(local_path, remote_path, True)
     # If it's a directory
     else:
         client.upload_dir(local_path, remote_path, True)

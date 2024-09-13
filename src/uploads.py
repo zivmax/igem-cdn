@@ -1,6 +1,7 @@
 import mimetypes
 import os
 import threading
+from sys import exit
 import warnings
 from pathlib import Path
 from tqdm import tqdm  # Import tqdm for progress bars
