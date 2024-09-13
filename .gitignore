@@ -2,3 +2,8 @@
 static/
 utils/pdfopt/
 __pycache__/
+dist/
+build/
+*.spec
+config.json
+ 
