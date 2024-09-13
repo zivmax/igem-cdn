@@ -196,7 +196,7 @@ class Session:
             warnings.warn("Query failed")
             return []
 
-    def upload(
+    def upload_file(
         self, file_path: str, dest_dir: str = "", output: bool = False
     ) -> str:
         """Upload a file to a specific remote path.
@@ -288,7 +288,7 @@ class Session:
         self.successful_uploads = 0
         def thread_upload(file_path, remote_dir_path):
             try:
-                self.upload(file_path, remote_dir_path, False)
+                self.upload_file(file_path, remote_dir_path, False)
                 with lock:
                     self.successful_uploads += 1
                     pbar.update(1)  # Update progress bar
