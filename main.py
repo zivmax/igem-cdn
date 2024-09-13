@@ -1,7 +1,16 @@
+#!/usr/bin/env python
 import os
+import sys
 import argparse
 import json
-from src.uploads import Session
+
+if __name__ == "__main__":
+    script_name = os.path.basename(sys.argv[0])
+
+    if script_name == "main.py":
+        from src.uploads import Session
+    else:
+        from igem.uploads import Session
 
 
 def delete_file_or_dir(client: Session, remote_dir: str) -> None:
@@ -57,6 +66,9 @@ def main() -> None:
     )
 
     args = parser.parse_args()
+
+    if config is None:
+        config = f"{os.getenv('HOME')}/.local/bin/igem-upload/igem/config.json"
     config = load_config(args.config)
 
     if config is None:
