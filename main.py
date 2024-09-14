@@ -80,9 +80,9 @@ def main() -> None:
     if config is None:
         return
 
-    username = config.get("username")
-    password = config.get("password")
-    local_root = config.get("local_root")
+    username = config.get("username")["data"]
+    password = config.get("password")["data"]
+    local_root = config.get("local_root")["data"]
     if username is None or password is None:
         print(
             "Error: 'username' and 'password' must be specified in the configuration file."

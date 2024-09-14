@@ -1,6 +1,11 @@
 {
-    "username": "your_username",
-    "password": "your_password",
-    "local_root": "/path/to/local/root"
+    "username": {
+        "data": "your_username"
+    },
+    "password": {
+        "data": "your_password"
+    },
+    "local_root": {
+        "data": "/path/to/your/local/static"
+    }
 }
-  
