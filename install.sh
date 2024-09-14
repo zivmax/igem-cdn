@@ -1,5 +1,6 @@
 rm -rf $HOME/.local/bin/igem-upload
 rm -rf $HOME/.local/bin/igem
+rm -rf build/ dist/ igem_upload.spec
 pyinstaller --name igem-upload --onefile main.py
 cp ./dist/igem-upload $HOME/.local/bin/igem-upload
 mkdir $HOME/.local/bin/igem
