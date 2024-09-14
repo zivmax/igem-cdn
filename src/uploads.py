@@ -317,7 +317,7 @@ class Session:
         print(f"Uploaded {self.successful_uploads} files to '{os.path.join(dest_dir, '')}'\n")
 
 
-    def delete(
+    def delete_file(
         self, filename: str, directory: str = "", output: bool = False
     ) -> None:
         """Delete a file in a specific directory.
@@ -386,7 +386,7 @@ class Session:
         ) as pbar:
             for current_dir, item in all_items:
                 if item["Type"] != "Folder" or (item["Type"] == "Folder" and recursive):
-                    self.delete(item["Name"], current_dir, False)
+                    self.delete_file(item["Name"], current_dir, False)
                     successful_deletions += 1
                 pbar.update(1)
 
