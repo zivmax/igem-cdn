@@ -455,7 +455,7 @@ class Session:
             file_list = []
             for item in contents:
                 if item["Type"] == "Folder":
-                    if not recursive:
+                    if recursive:
                         file_list.extend(
                             collect_files(
                                 item["Prefix"].split(f"teams/{self.team_id}/")[1],
