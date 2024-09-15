@@ -1,3 +1,4 @@
+pyinstaller
 prettytable
 requests
 tqdm
