@@ -9,8 +9,7 @@ before_script:
 build:
   stage: build
   script:
-    - pip list
-    - python -m PyInstaller main.py  --name $PROGRAM_NAME --hidden-import=_cffi_backend -F --clean --strip
+    - bash setup.sh build 
     - du -sh dist/igem-upload
   artifacts:
     paths:
