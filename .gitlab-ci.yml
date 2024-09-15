@@ -1,0 +1,22 @@
+image: python:3.12
+
+stages:
+  - build
+
+variables:
+  VIRTUAL_ENV: .venv
+  PATH: $VIRTUAL_ENV/bin:$PATH
+
+before_script:
+  - python -m venv $VIRTUAL_ENV
+  - pip install --upgrade pip
+  - pip install -r requirements.txt
+
+build:
+  stage: build
+  script:
+    - pip install pyinstaller
+    - pyinstaller --name igem-upload --onefile main.py
+  artifacts:
+    paths:
+      - dist/igem-upload
