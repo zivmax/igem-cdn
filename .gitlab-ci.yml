@@ -10,7 +10,7 @@ build:
   stage: build
   script:
     - pip list
-    - pyinstaller --name igem-upload --onefile main.py --strip
+    - python -m PyInstaller main.py  --name $PROGRAM_NAME --hidden-import=_cffi_backend -F --clean --strip
     - du -sh dist/igem-upload
   artifacts:
     paths:
