@@ -1,13 +1,13 @@
+import httpx
 import mimetypes
 import os
+import prettytable as pt
 import threading
+from pathlib import Path
 from sys import exit
 import warnings
-from pathlib import Path
-from tqdm import tqdm  # Import tqdm for progress bars
+from tqdm import tqdm
 
-import prettytable as pt
-import requests
 
 NOT_LOGGED_IN = 0
 LOGGED_IN = 1
@@ -33,9 +33,10 @@ def check_parameter(directory: str) -> None:
 class Session:
     """Class to manage the session for interacting with the iGEM API."""
 
-    requests_session_instance = requests.session()
-    status = NOT_LOGGED_IN
-    team_id = ""
+    def __init__(self):
+        self.client = httpx.Client(http2=True)
+        self.status = NOT_LOGGED_IN
+        self.team_id = ""
 
     def _request(
         self,
@@ -44,7 +45,7 @@ class Session:
         params: dict = None,
         data: dict = None,
         files: dict = None,
-    ) -> requests.Response:
+    ) -> httpx.Response:
         """Make an HTTP request to the specified URL.
 
         Args:
@@ -55,7 +56,7 @@ class Session:
             files (dict, optional): Files to upload.
 
         Returns:
-            requests.Response: The response object from the request.
+            httpx.Response: The response object from the request.
 
         Raises:
             Warning: If the user is not logged in.
@@ -63,7 +64,7 @@ class Session:
         if self.status != LOGGED_IN:
             warnings.warn("Not logged in, please login first")
             exit(1)
-        return self.requests_session_instance.request(
+        return self.client.request(
             method=method, url=url, params=params, data=data, files=files
         )
 
@@ -76,8 +77,7 @@ class Session:
         Raises:
             Warning: If the user is not part of any team or if their team or role is not accepted.
         """
-        response = self.requests_session_instance.request(
-            "GET",
+        response = self.client.get(
             "https://api.igem.org/v1/teams/memberships/mine",
             params={"onlyAcceptedTeams": True},
         )
@@ -114,10 +114,10 @@ class Session:
         data = {"identifier": username, "password": password}
         try:
             print("Logging in...")
-            response = self.requests_session_instance.post(
+            response = self.client.post(
                 "https://api.igem.org/v1/auth/sign-in", data=data
             )
-            response.raise_for_status()  # Raises an HTTPError for bad responses (4xx and 5xx)
+            response.raise_for_status()  # Raises an HTTPStatusError for bad responses (4xx and 5xx)
 
             if "Invalid credentials" in response.text:
                 self.status = LOGIN_FAILED
@@ -127,11 +127,11 @@ class Session:
                 self.status = LOGGED_IN
                 self.team_id = self._request_team_id()
 
-        except requests.exceptions.HTTPError as http_err:
+        except httpx.HTTPStatusError as http_err:
             self.status = LOGIN_FAILED
             warnings.warn(f"HTTP error occurred: {http_err}")
             exit(1)
-        except requests.exceptions.RequestException as req_err:
+        except httpx.RequestError as req_err:
             self.status = LOGIN_FAILED
             warnings.warn(f"Request failed: {req_err}")
             exit(1)
@@ -317,9 +317,7 @@ class Session:
         print(f"Uploaded {self.successful_uploads} files to '{os.path.join(dest_dir, '')}'\n")
 
 
-    def delete_file(
-        self, filename: str, directory: str = "", output: bool = False
-    ) -> None:
+    def delete_file(self, filename: str, directory: str = "", output: bool = False) -> None:
         """Delete a file in a specific directory.
 
         Args:
@@ -424,12 +422,10 @@ class Session:
         }
 
         try:
-            response = requests.get(
-                file_url, headers=headers, timeout=10
-            )  # download file
+            with httpx.Client(http2=True, headers=headers) as client:
+                response = client.get(file_url, timeout=10)
 
             if response.status_code == 200:
-                # save file
                 with open(file_path, "wb") as file:
                     file.write(response.content)
                 if output:
@@ -440,9 +436,9 @@ class Session:
                     f"Failed to download '{file_url}': Response Header {response.headers}"
                 )
                 return False
-        except requests.exceptions.RequestException as e:
+        except httpx.RequestError as e:
             print(f"Request failed: {e}")
-            return False
+            exit(1)
 
     def download_dir(self, directory: str = "", recursive: bool = False) -> None:
         """Download a directory and its subdirectories to the local file system."""

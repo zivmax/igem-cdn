@@ -1,4 +1,5 @@
 pyinstaller
 prettytable
-requests
 tqdm
+httpx[http2]
+brotlipy
