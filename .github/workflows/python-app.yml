@@ -30,7 +30,7 @@ jobs:
     - name: Build with Pyinstaller
       run: pyinstaller --name igem-upload --onefile main.py --strip
     - name: Upload artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: igem-upload
         path: dist/igem-upload
