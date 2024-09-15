@@ -76,10 +76,14 @@ def main() -> None:
 
     args = parser.parse_args()
 
-    if args.config is None:
+    config = args.config
+    remote_path = args.remote_path
+    local_path = args.local_path
+
+    if config is None:
         config = load_config(f"{os.getenv('HOME')}/.local/bin/igem/config.json")
     else:
-        config = load_config(args.config)
+        config = load_config(config)
 
     if config is None:
         return
@@ -94,11 +98,11 @@ def main() -> None:
         return
 
     # Calculate default remote_path if not provided
-    if args.remote_path is None:
-        args.remote_path = get_default_remote_path(args.local_path, local_root)
+    if remote_path is None:
+        remote_path = get_default_remote_path(local_path, local_root)
 
     else:
-        args.remote_path = args.remote_path.replace("static/", "")
+        remote_path = remote_path.replace("static/", "")
 
     client = Session()
     client.login(username, password)
@@ -107,20 +111,23 @@ def main() -> None:
     if not os.path.exists(local_root):
         os.makedirs(local_root)
 
+    if not os.path.exists(local_root + remote_path):
+        os.makedirs(local_root + remote_path)
+
     match args.action:
         case "delete":
-            if not args.remote_path:
+            if not remote_path:
                 print("Error: --remote-path is required for delete action")
                 return
-            delete(client, args.remote_path)
+            delete(client, remote_path)
         case "sync":
-            sync_work_dir(client, args.local_path, args.remote_path)
+            sync_work_dir(client, local_path, remote_path)
         case "download":
-            download(client, args.remote_path)
+            download(client, remote_path)
         case "upload":
-            upload(client, args.local_path, args.remote_path)
+            upload(client, local_path, remote_path)
         case "query":
-            client.query(args.remote_path)
+            client.query(remote_path)
 
 
 if __name__ == "__main__":
