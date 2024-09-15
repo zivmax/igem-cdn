@@ -10,7 +10,7 @@ build:
   stage: build
   script:
     - bash setup.sh build 
-    - du -sh dist/igem-upload
+    - du -sh dist/
   artifacts:
     paths:
-      - dist/igem-upload
+      - dist/

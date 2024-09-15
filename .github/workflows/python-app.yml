@@ -32,6 +32,6 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: igem-upload
-        path: dist/igem-upload
+        name: release
+        path: dist/
 
