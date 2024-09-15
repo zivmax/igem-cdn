@@ -3,6 +3,7 @@ import argparse
 import json
 from src.uploads import Session
 
+
 def delete(client: Session, remote_path: str) -> None:
     if os.path.isfile("static/" + remote_path):
         dir_path = os.path.dirname(remote_path)
@@ -11,7 +12,8 @@ def delete(client: Session, remote_path: str) -> None:
     elif os.path.isdir("static/" + remote_path):
         client.delete_dir(remote_path, True)
     else:
-        print(f"Error: {remote_path} does not exist.")
+        print(f"Error: 'static/{remote_path}' does not exist.")
+
 
 def sync_work_dir(client: Session, local_work_dir: str, remote_work_dir: str) -> None:
     """Upload all local files to remote without overwriting check, then download all remote files to local."""
@@ -28,7 +30,8 @@ def download(client: Session, remote_path: str) -> None:
     elif os.path.isdir("static/" + remote_path):
         client.download_dir(remote_path, True)
     else:
-        print(f"Error: {remote_path} does not exist.")
+        print(f"Error: 'static/{remote_path}' does not exist.")
+
 
 def upload(client: Session, local_path: str, remote_path: str) -> None:
     """Upload to remote without overwriting check."""
@@ -39,7 +42,8 @@ def upload(client: Session, local_path: str, remote_path: str) -> None:
     elif os.path.isdir(local_path):
         client.upload_dir(local_path, remote_path, True)
     else:
-        print(f"Error: {remote_path} does not exist.")
+        print(f"Error: 'static/{remote_path}' does not exist.")
+
 
 def load_config(config_path="config.json") -> dict:
     """Loads the configuration from a JSON file."""
@@ -52,9 +56,9 @@ def load_config(config_path="config.json") -> dict:
         return None
 
 
-def get_default_remote_path(local_root):
-    """Calculates the default remote directory based on the local path."""
-    return os.path.relpath(local_root, os.getcwd())
+def get_default_remote_path(local_path, local_root):
+    """Calculates the default remote directory based on the local root."""
+    return os.path.relpath(local_path, local_root)
 
 
 def main() -> None:
@@ -66,8 +70,8 @@ def main() -> None:
         choices=["delete", "sync", "download", "upload", "query"],
         help="Action to perform",
     )
+    parser.add_argument("local_path", help="Local path")
     parser.add_argument("-rp", "--remote-path", help="Remote path")
-    parser.add_argument("-lp", "--local-path", help="Local path")
     parser.add_argument("--config", help="Path to the configuration file")
 
     args = parser.parse_args()
@@ -91,20 +95,17 @@ def main() -> None:
 
     # Calculate default remote_path if not provided
     if args.remote_path is None:
-        if args.action != "delete":  # 'delete' doesn't use local_path
-            if not args.local_path:
-                print(
-                    f"Error: --local-path is required for {args.action} action when --remote-path is not specified."
-                )
-                return
-            args.remote_path = get_default_remote_path(local_root)
-        else:
-            args.remote_path = ""  # Default to root if not provided for delete
+        args.remote_path = get_default_remote_path(args.local_path, local_root)
+
     else:
         args.remote_path = args.remote_path.replace("static/", "")
 
     client = Session()
     client.login(username, password)
+
+    # If no static directory, create one
+    if not os.path.exists(local_root):
+        os.makedirs(local_root)
 
     match args.action:
         case "delete":
