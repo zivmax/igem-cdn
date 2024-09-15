@@ -9,8 +9,10 @@ before_script:
 build:
   stage: build
   script:
+    - pip list
     - pip install pyinstaller
     - pyinstaller --name igem-upload --onefile main.py
+    - du -sh dist/igem-upload
   artifacts:
     paths:
       - dist/igem-upload
