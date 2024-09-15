@@ -3,14 +3,7 @@ image: python:3.12
 stages:
   - build
 
-variables:
-  VIRTUAL_ENV: .venv
-  PATH: $VIRTUAL_ENV/bin:$PATH
-
 before_script:
-  - python -m venv $VIRTUAL_ENV
-  - source $VIRTUAL_ENV/bin/activate
-  - pip install --upgrade pip
   - pip install -r requirements.txt
 
 build:
