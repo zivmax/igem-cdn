@@ -6,6 +6,6 @@
         "data": "your_password"
     },
     "local_root": {
-        "data": "/path/to/your/local/static"
+        "data": "/path/to/your/local/server"
     }
 }

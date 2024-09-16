@@ -1,5 +1,5 @@
 .venv/
-static/
+server/
 utils/pdfopt/
 __pycache__/
 dist/

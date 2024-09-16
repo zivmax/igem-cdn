@@ -5,14 +5,14 @@ from src.uploads import Session
 
 
 def delete(client: Session, remote_path: str) -> None:
-    if os.path.isfile("static/" + remote_path):
+    if os.path.isfile("server/" + remote_path):
         dir_path = os.path.dirname(remote_path)
         file_name = os.path.basename(remote_path)
         client.delete_file(file_name, dir_path, True)
-    elif os.path.isdir("static/" + remote_path):
+    elif os.path.isdir("server/" + remote_path):
         client.delete_dir(remote_path, True)
     else:
-        print(f"Error: 'static/{remote_path}' does not exist.")
+        print(f"Error: 'server/{remote_path}' does not exist.")
 
 
 def sync_work_dir(client: Session, local_work_dir: str, remote_work_dir: str) -> None:
@@ -24,13 +24,13 @@ def sync_work_dir(client: Session, local_work_dir: str, remote_work_dir: str) ->
 def download(client: Session, remote_path: str) -> None:
     """Download from remote without overwriting check."""
     # If it's a file
-    if os.path.isfile("static/" + remote_path):
+    if os.path.isfile("server/" + remote_path):
         client.download_file(remote_path, True)
     # If it's a directory
-    elif os.path.isdir("static/" + remote_path):
+    elif os.path.isdir("server/" + remote_path):
         client.download_dir(remote_path, True)
     else:
-        print(f"Error: 'static/{remote_path}' does not exist.")
+        print(f"Error: 'server/{remote_path}' does not exist.")
 
 
 def upload(client: Session, local_path: str, remote_path: str) -> None:
@@ -42,7 +42,7 @@ def upload(client: Session, local_path: str, remote_path: str) -> None:
     elif os.path.isdir(local_path):
         client.upload_dir(local_path, remote_path, True)
     else:
-        print(f"Error: 'static/{remote_path}' does not exist.")
+        print(f"Error: 'server/{remote_path}' does not exist.")
 
 
 def load_config(config_path="config.json") -> dict:
@@ -102,12 +102,12 @@ def main() -> None:
         remote_path = get_default_remote_path(local_path, local_root)
 
     else:
-        remote_path = remote_path.replace("static/", "")
+        remote_path = remote_path.replace("server/", "")
 
     client = Session()
     client.login(username, password)
 
-    # If no static directory, create one
+    # If no server directory, create one
     if not os.path.exists(local_root):
         os.makedirs(local_root)
 

@@ -471,7 +471,7 @@ class Session:
             return
 
         for _, dir_path in all_files:
-            local_target_directory = f"static/{dir_path}"
+            local_target_directory = f"server/{dir_path}"
             os.makedirs(local_target_directory, exist_ok=True)
 
         # Create a lock for thread-safe updates
@@ -490,7 +490,7 @@ class Session:
         with tqdm(total=len(all_files), desc="Downloading files", unit="file") as pbar:
             threads = []
             for file_url, dir_path in all_files:
-                local_target_directory = f"static/{dir_path}"
+                local_target_directory = f"server/{dir_path}"
                 thread = threading.Thread(
                     target=thread_download,
                     args=(file_url, local_target_directory),
