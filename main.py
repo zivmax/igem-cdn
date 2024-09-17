@@ -3,13 +3,14 @@ import argparse
 import json
 from src.uploads import Session
 
+local_root = ""
 
 def delete(client: Session, remote_path: str) -> None:
-    if os.path.isfile("server/" + remote_path):
+    if os.path.isfile(local_root + remote_path):
         dir_path = os.path.dirname(remote_path)
         file_name = os.path.basename(remote_path)
         client.delete_file(file_name, dir_path, True)
-    elif os.path.isdir("server/" + remote_path):
+    elif os.path.isdir(local_root + remote_path):
         client.delete_dir(remote_path, True)
     else:
         print(f"Error: 'server/{remote_path}' does not exist.")
@@ -24,10 +25,10 @@ def sync_work_dir(client: Session, local_work_dir: str, remote_work_dir: str) ->
 def download(client: Session, remote_path: str) -> None:
     """Download from remote without overwriting check."""
     # If it's a file
-    if os.path.isfile("server/" + remote_path):
+    if os.path.isfile(local_root + remote_path):
         client.download_file(remote_path, True)
     # If it's a directory
-    elif os.path.isdir("server/" + remote_path):
+    elif os.path.isdir(local_root + remote_path):
         client.download_dir(remote_path, True)
     else:
         print(f"Error: 'server/{remote_path}' does not exist.")
@@ -56,7 +57,7 @@ def load_config(config_path="config.json") -> dict:
         return None
 
 
-def get_default_remote_path(local_path, local_root):
+def get_default_remote_path(local_path):
     """Calculates the default remote directory based on the local root."""
     return os.path.relpath(local_path, local_root)
 
@@ -90,6 +91,7 @@ def main() -> None:
 
     username = config.get("username")["data"]
     password = config.get("password")["data"]
+    global local_root
     local_root = config.get("local_root")["data"]
     if username is None or password is None:
         print(
@@ -99,7 +101,7 @@ def main() -> None:
 
     # Calculate default remote_path if not provided
     if remote_path is None:
-        remote_path = get_default_remote_path(local_path, local_root)
+        remote_path = get_default_remote_path(local_path)
 
     else:
         remote_path = remote_path.replace("server/", "")
