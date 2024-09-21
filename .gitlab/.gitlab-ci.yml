@@ -10,7 +10,8 @@ build:
   stage: build
   script:
     - bash setup.sh build 
+    - mv dist/* ./
     - du -sh dist/
   artifacts:
     paths:
-      - dist/
+      - igem-cdn
