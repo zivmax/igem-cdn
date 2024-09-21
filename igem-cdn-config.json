@@ -1,0 +1,11 @@
+{
+    "username": {
+        "data": "your_username"
+    },
+    "password": {
+        "data": "your_password"
+    },
+    "local_root": {
+        "data": "/path/to/your/local/server"
+    }
+}
