@@ -115,7 +115,7 @@ class Session:
         try:
             print("Logging in...")
             response = self.client.post(
-                "https://api.igem.org/v1/auth/sign-in", data=data
+                "https://api.igem.org/v1/auth/sign-in", data=data, timeout=10
             )
             response.raise_for_status()  # Raises an HTTPStatusError for bad responses (4xx and 5xx)
 

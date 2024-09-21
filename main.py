@@ -24,10 +24,8 @@ def sync_work_dir(client: Session, local_work_dir: str, remote_work_dir: str) ->
 
 def download(client: Session, remote_path: str) -> None:
     """Download from remote without overwriting check."""
-    # If it's a file
     if os.path.isfile(local_root + remote_path):
-        client.download_file(remote_path, True)
-    # If it's a directory
+        client.download_file(remote_path, os.path.dirname(remote_path), True)
     elif os.path.isdir(local_root + remote_path):
         client.download_dir(remote_path, True)
     else:
@@ -36,10 +34,8 @@ def download(client: Session, remote_path: str) -> None:
 
 def upload(client: Session, local_path: str, remote_path: str) -> None:
     """Upload to remote without overwriting check."""
-    # If it's a file
     if os.path.isfile(local_path):
-        client.upload_file(local_path, remote_path, True)
-    # If it's a directory
+        client.upload_file(local_path, os.path.dirname(remote_path), True)
     elif os.path.isdir(local_path):
         client.upload_dir(local_path, remote_path, True)
     else:
