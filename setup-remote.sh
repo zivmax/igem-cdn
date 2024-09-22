@@ -23,20 +23,20 @@ ensure_path() {
 
 install_program() {
     ensure_install_path
-    rm -rf $INSTALL_PATH/$PROGRAM_NAME
-    rm -rf $PROGRAM_DIR
-    mv $PROGRAM_NAME $INSTALL_PATH/$PROGRAM_NAME
-    mkdir $PROGRAM_DIR
-    cp igem-cdn-config.json $PROGRAM_DIR/config.json
-    chmod +x $INSTALL_PATH/$PROGRAM_NAME
+    rm -rf "$INSTALL_PATH/$PROGRAM_NAME"
+    rm -rf "$PROGRAM_DIR"
+    mv "$PROGRAM_NAME" "$INSTALL_PATH/$PROGRAM_NAME"
+    mkdir "$PROGRAM_DIR"
+    cp igem-cdn-config.json "$PROGRAM_DIR/config.json"
+    chmod +x "$INSTALL_PATH/$PROGRAM_NAME"
     ensure_path
     echo "iGEM CDN Tool installed successfully!"
     echo "Please restart your terminal."
 }
 
 uninstall_program() {
-    rm -rf $INSTALL_PATH/$PROGRAM_NAME
-    rm -rf $PROGRAM_DIR
+    rm -rf "$INSTALL_PATH/$PROGRAM_NAME"
+    rm -rf "$PROGRAM_DIR"
     echo "iGEM CDN Tool uninstalled successfully!"
 }
 
@@ -52,7 +52,6 @@ get_program() {
     fi
 
     curl -L "$DOWNLOAD_URL" -o "igem-cdn-tool.zip"
-    
     unzip igem-cdn-tool.zip
     rm igem-cdn-tool.zip
 }
@@ -69,4 +68,5 @@ elif [ "$1" == "install" ]; then
 else
     echo "Please specify the action you want to perform: 'install' or 'uninstall'."
     echo "For installation, also specify the ISA: 'ARM' or 'X86'."
+    exit 1
 fi
