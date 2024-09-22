@@ -43,9 +43,9 @@ uninstall_program() {
 get_program() {
     ISA=$1
     if [ "$ISA" == "ARM" ]; then
-        DOWNLOAD_URL="https://gitlab.igem.org/zivmax/igem-cdn/-/jobs/929792/artifacts/download?file_type=archive"
+        DOWNLOAD_URL="https://gitlab.igem.org/zivmax/igem-cdn/-/jobs/929992/artifacts/download?file_type=archive"
     elif [ "$ISA" == "X86" ]; then
-        DOWNLOAD_URL="https://github.com/zivmax/igem-cdn/releases/download/v1.0.1/release.zip"
+        DOWNLOAD_URL="https://github.com/zivmax/igem-cdn/releases/download/v1.0.2/release.zip"
     else
         echo "Invalid ISA specified. Please choose 'ARM' or 'X86'."
         exit 1
