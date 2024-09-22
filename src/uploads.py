@@ -12,6 +12,7 @@ from tqdm import tqdm
 NOT_LOGGED_IN = 0
 LOGGED_IN = 1
 LOGIN_FAILED = -1
+TIMEOUT = 30
 
 
 def check_parameter(directory: str) -> None:
@@ -65,7 +66,12 @@ class Session:
             warnings.warn("Not logged in, please login first")
             exit(1)
         return self.client.request(
-            method=method, url=url, params=params, data=data, files=files
+            method=method, 
+            url=url, 
+            params=params, 
+            data=data, 
+            files=files, 
+            timeout=TIMEOUT
         )
 
     def _request_team_id(self) -> str:
@@ -80,6 +86,7 @@ class Session:
         response = self.client.get(
             "https://api.igem.org/v1/teams/memberships/mine",
             params={"onlyAcceptedTeams": True},
+            timeout=TIMEOUT,
         )
         team_list = response.json()
         if len(team_list) == 0:
@@ -115,7 +122,7 @@ class Session:
         try:
             print("Logging in...")
             response = self.client.post(
-                "https://api.igem.org/v1/auth/sign-in", data=data, timeout=10
+                "https://api.igem.org/v1/auth/sign-in", data=data, timeout=TIMEOUT
             )
             response.raise_for_status()  # Raises an HTTPStatusError for bad responses (4xx and 5xx)
 
@@ -423,7 +430,7 @@ class Session:
 
         try:
             with httpx.Client(http2=True, headers=headers) as client:
-                response = client.get(file_url, timeout=10)
+                response = client.get(file_url, timeout=TIMEOUT)
 
             if response.status_code == 200:
                 with open(file_path, "wb") as file:
