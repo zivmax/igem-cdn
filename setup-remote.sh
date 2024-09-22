@@ -27,7 +27,7 @@ install_program() {
     rm -rf "$PROGRAM_DIR"
     mv "$PROGRAM_NAME" "$INSTALL_PATH/$PROGRAM_NAME"
     mkdir "$PROGRAM_DIR"
-    cp igem-cdn-config.json "$PROGRAM_DIR/config.json"
+    mv igem-cdn-config.json "$PROGRAM_DIR/config.json"
     chmod +x "$INSTALL_PATH/$PROGRAM_NAME"
     ensure_path
     echo "iGEM CDN Tool installed successfully!"
