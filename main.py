@@ -109,8 +109,8 @@ def main() -> None:
     if not os.path.exists(local_root):
         os.makedirs(local_root)
 
-    if not os.path.exists(local_root + remote_path) and remote_path != ".":
-        os.makedirs(local_root + remote_path)
+    if not os.path.exists(os.path.join(local_root, remote_path)):
+        os.makedirs(os.path.join(local_root + remote_path))
 
     match args.action:
         case "delete":
