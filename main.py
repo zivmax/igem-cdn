@@ -56,8 +56,8 @@ def load_config(config_path="config.json") -> dict:
 
 def get_default_remote_path(local_path):
     """Calculates the default remote directory based on the local root."""
-    return os.path.relpath(local_path, local_root)
-
+    rel = os.path.relpath(local_path, local_root)
+    return rel if rel != "." else ""
 
 def main() -> None:
     parser = argparse.ArgumentParser(
@@ -110,7 +110,7 @@ def main() -> None:
     if not os.path.exists(local_root):
         os.makedirs(local_root)
 
-    if not os.path.exists(os.path.join(local_root, remote_path)) and remote_path != ".":
+    if not os.path.exists(os.path.join(local_root, remote_path)):
         os.makedirs(os.path.join(local_root + remote_path))
 
     match args.action:

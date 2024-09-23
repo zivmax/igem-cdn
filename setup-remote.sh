@@ -45,7 +45,7 @@ get_program() {
     if [ "$ISA" == "ARM" ]; then
         DOWNLOAD_URL="https://gitlab.igem.org/zivmax/igem-cdn/-/jobs/933640/artifacts/download?file_type=archive"
     elif [ "$ISA" == "X86" ]; then
-        DOWNLOAD_URL="https://github.com/zivmax/igem-cdn/releases/download/v1.0.0/release.zip"
+        DOWNLOAD_URL="https://github.com/zivmax/igem-cdn/releases/download/latest/release.zip"
     else
         echo "Invalid ISA specified. Please choose 'ARM' or 'X86'."
         exit 1
