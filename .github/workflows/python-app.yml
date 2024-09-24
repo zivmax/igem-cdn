@@ -14,13 +14,15 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
-        python-version: ["3.12"]
         include:
+          - os: ubuntu-latest
+            python-version: "3.12"
           - os: macos-latest
-            architecture: x86_64
-          - os: macos-latest
+            python-version: "3.12"
             architecture: arm64
+          - os: macos-13
+            python-version: "3.12"
+            architecture: x86_64
 
     steps:
     - uses: actions/checkout@v4
@@ -38,5 +40,5 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: release-${{ matrix.os }}-${{ matrix.architecture }}
+        name: release-${{ matrix.os }}-${{ matrix.architecture || 'default' }}
         path: dist/
