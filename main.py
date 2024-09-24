@@ -79,7 +79,7 @@ def main() -> None:
     local_path = args.local_path
 
     if config is None:
-        config = load_config(f"{os.getenv('HOME')}/.local/bin/igem/config.json")
+        config = load_config(f"{os.getenv('HOME')}/.local/share/igem/config.json")
     else:
         config = load_config(config)
 

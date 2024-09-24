@@ -1,41 +1,66 @@
 #!/bin/bash
 
-INSTALL_PATH="$HOME/.local/bin"
+# Determine the install path based on the OS
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    INSTALL_PATH="/usr/local/bin"
+    SHELL_CONFIG="$HOME/.zshrc"
+else
+    INSTALL_PATH="$HOME/.local/bin"
+    SHELL_CONFIG="$HOME/.bashrc"
+fi
+
 PROGRAM_NAME="igem-cdn"
-PROGRAM_DIR="$INSTALL_PATH/igem"
+PROGRAM_DIR="$HOME/.local/share/igem"
 
 ensure_install_path() {
     if [ ! -d "$INSTALL_PATH" ]; then
         echo "$INSTALL_PATH does not exist. Creating it now."
-        mkdir -p "$INSTALL_PATH"
-        echo "$INSTALL_PATH created."
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            sudo mkdir -p "$INSTALL_PATH"
+            echo "$INSTALL_PATH created."
+        else
+            mkdir -p "$INSTALL_PATH"
+            echo "$INSTALL_PATH created."
+        fi
     fi
 }
 
 ensure_path() {
     if [[ ":$PATH:" != *":$INSTALL_PATH:"* ]]; then
-        echo "Adding $INSTALL_PATH to PATH in .bashrc"
-        echo -e "\n# Added by iGEM CDN Tool setup script on $(date)" >> "$HOME/.bashrc"
-        echo "export PATH=\"$PATH:$INSTALL_PATH\"" >> "$HOME/.bashrc"
-        echo "Please restart your terminal or run 'source ~/.bashrc' to update your PATH."
+        echo "Adding $INSTALL_PATH to PATH in $SHELL_CONFIG"
+        echo -e "\n# Added by iGEM CDN Tool setup script on $(date)" >> "$SHELL_CONFIG"
+        echo "export PATH=\"$PATH:$INSTALL_PATH\"" >> "$SHELL_CONFIG"
+        echo "Please restart your terminal or run 'source $SHELL_CONFIG' to update your PATH."
     fi
 }
 
 install_program() {
     ensure_install_path
-    rm -rf "$INSTALL_PATH/$PROGRAM_NAME"
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        sudo rm -rf "$INSTALL_PATH/$PROGRAM_NAME"
+        sudo mv "$PROGRAM_NAME" "$INSTALL_PATH/$PROGRAM_NAME"
+        sudo chmod +x "$INSTALL_PATH/$PROGRAM_NAME"
+    else
+        rm -rf "$INSTALL_PATH/$PROGRAM_NAME"
+        mv "$PROGRAM_NAME" "$INSTALL_PATH/$PROGRAM_NAME"
+        chmod +x "$INSTALL_PATH/$PROGRAM_NAME"
+    fi
+
     rm -rf "$PROGRAM_DIR"
-    mv "$PROGRAM_NAME" "$INSTALL_PATH/$PROGRAM_NAME"
-    mkdir "$PROGRAM_DIR"
+    mkdir -p "$PROGRAM_DIR"
     mv igem-cdn-config.json "$PROGRAM_DIR/config.json"
-    chmod +x "$INSTALL_PATH/$PROGRAM_NAME"
+    
     ensure_path
     echo "iGEM CDN Tool installed successfully!"
     echo "Please restart your terminal."
 }
 
 uninstall_program() {
-    rm -rf "$INSTALL_PATH/$PROGRAM_NAME"
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        sudo rm -rf "$INSTALL_PATH/$PROGRAM_NAME"
+    else
+        rm -rf "$INSTALL_PATH/$PROGRAM_NAME"
+    fi
     rm -rf "$PROGRAM_DIR"
     echo "iGEM CDN Tool uninstalled successfully!"
 }
@@ -64,7 +89,7 @@ elif [ "$1" == "install" ]; then
         exit 1
     fi
     get_program "$2"
-    install_program
+    install_program "$2"
 else
     echo "Please specify the action you want to perform: 'install' or 'uninstall'."
     echo "For installation, also specify the ISA: 'ARM' or 'X86'."

@@ -2,7 +2,7 @@
 
 INSTALL_PATH="$HOME/.local/bin"
 PROGRAM_NAME="igem-cdn"
-PROGRAM_DIR="$INSTALL_PATH/igem"
+PROGRAM_DIR="$HOME/.local/share/igem"
 
 ensure_install_path() {
     if [ ! -d "$INSTALL_PATH" ]; then
