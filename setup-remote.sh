@@ -67,11 +67,20 @@ uninstall_program() {
 
 get_program() {
     ISA=$1
-    if [ "$ISA" == "ARM" ]; then
-        DOWNLOAD_URL="https://gitlab.igem.org/zivmax/igem-cdn/-/jobs/933704/artifacts/download?file_type=archive"
-    elif [ "$ISA" == "X86" ]; then
-        DOWNLOAD_URL="https://github.com/zivmax/igem-cdn/releases/download/latest/release.zip"
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        if [ "$ISA" == "ARM" ]; then
+            DOWNLOAD_URL="https://github.com/zivmax/igem-cdn/releases/download/latest/release-macos-latest-arm64.zip"
+        elif [ "$ISA" == "X86" ]; then
+            DOWNLOAD_URL="https://github.com/zivmax/igem-cdn/releases/download/latest/release-macos-13-x86_64.zip"
+        else
     else
+        if [ "$ISA" == "ARM" ]; then
+            DOWNLOAD_URL="https://github.com/zivmax/igem-cdn/releases/download/latest/release-ubuntu-latest-arm64.zip"
+        elif [ "$ISA" == "X86" ]; then
+            DOWNLOAD_URL="https://github.com/zivmax/igem-cdn/releases/download/latest/release-ubuntu-latest-x86_64.zip"
+        else
+    fi
+
         echo "Invalid ISA specified. Please choose 'ARM' or 'X86'."
         exit 1
     fi
