@@ -66,23 +66,25 @@ uninstall_program() {
 }
 
 get_program() {
-    ISA=$1
+    ARCH=$(uname -m)
     if [[ "$OSTYPE" == "darwin"* ]]; then
-        if [ "$ISA" == "ARM" ]; then
+        if [[ "$ARCH" == "arm64" ]]; then
             DOWNLOAD_URL="https://github.com/zivmax/igem-cdn/releases/download/latest/release-macos-latest-arm64.zip"
-        elif [ "$ISA" == "X86" ]; then
+        elif [[ "$ARCH" == "x86_64" ]]; then
             DOWNLOAD_URL="https://github.com/zivmax/igem-cdn/releases/download/latest/release-macos-13-x86_64.zip"
         else
+            echo "Unsupported architecture: $ARCH"
+            exit 1
+        fi
     else
-        if [ "$ISA" == "ARM" ]; then
+        if [[ "$ARCH" == "aarch64" ]]; then
             DOWNLOAD_URL="https://github.com/zivmax/igem-cdn/releases/download/latest/release-ubuntu-latest-arm64.zip"
-        elif [ "$ISA" == "X86" ]; then
+        elif [[ "$ARCH" == "x86_64" ]]; then
             DOWNLOAD_URL="https://github.com/zivmax/igem-cdn/releases/download/latest/release-ubuntu-latest-x86_64.zip"
         else
-    fi
-
-        echo "Invalid ISA specified. Please choose 'ARM' or 'X86'."
-        exit 1
+            echo "Unsupported architecture: $ARCH"
+            exit 1
+        fi
     fi
 
     curl -L "$DOWNLOAD_URL" -o "igem-cdn-tool.zip"
@@ -93,14 +95,9 @@ get_program() {
 if [ "$1" == "uninstall" ]; then
     uninstall_program
 elif [ "$1" == "install" ]; then
-    if [ -z "$2" ]; then
-        echo "Please specify the ISA: 'ARM' or 'X86'."
-        exit 1
-    fi
-    get_program "$2"
-    install_program "$2"
+    get_program
+    install_program
 else
     echo "Please specify the action you want to perform: 'install' or 'uninstall'."
-    echo "For installation, also specify the ISA: 'ARM' or 'X86'."
     exit 1
 fi
