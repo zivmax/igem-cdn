@@ -16,7 +16,11 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest]
         python-version: ["3.12"]
-        architecture: [x86_64, arm64]
+        include:
+          - os: macos-latest
+            architecture: x86_64
+          - os: macos-latest
+            architecture: arm64
 
     steps:
     - uses: actions/checkout@v4
@@ -30,11 +34,7 @@ jobs:
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Build with PyInstaller
       run: |
-        if [ "${{ matrix.os }}" == "macos-latest" ]; then
-          CFLAGS="-arch ${{ matrix.architecture }}" LDFLAGS="-arch ${{ matrix.architecture }}" bash setup.sh build
-        else
           bash setup.sh build
-        fi
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
