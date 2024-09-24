@@ -1,4 +1,4 @@
-name: Build Python Application
+name: Build and Release Python Application
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: ["main"]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -46,3 +46,91 @@ jobs:
         with:
           name: release-${{ matrix.os }}-${{ matrix.architecture || 'default' }}
           path: dist/
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Delete Existing Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG_NAME="latest"  # Adjust as needed
+          RELEASE_ID=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+            "https://api.github.com/repos/${{ github.repository }}/releases/tags/$TAG_NAME" | jq -r .id)
+
+          if [ "$RELEASE_ID" != "null" ]; then
+            curl -s -X DELETE -H "Authorization: token $GITHUB_TOKEN" \
+              "https://api.github.com/repos/${{ github.repository }}/releases/$RELEASE_ID"
+          fi
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: latest  # Adjust as needed
+          release_name: Release latest
+          draft: false
+          prerelease: false
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+
+      - name: List Downloaded Artifacts
+        run: ls -la ./artifacts
+  
+      - name: Zip Artifacts
+        run: |
+          for file in ./artifacts/*; do
+            filename=$(basename "$file")
+            zip -r "${filename}.zip" "$file"
+          done
+
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: release-ubuntu-latest-x86_64.zip
+          asset_name: release-ubuntu-latest-x86_64.zip
+          asset_content_type: application/zip
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: release-ubuntu-latest-arm64.zip
+          asset_name: release-ubuntu-latest-arm64.zip
+          asset_content_type: application/zip
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: release-macos-13-x86_64.zip
+          asset_name: release-macos-13-x86_64.zip
+          asset_content_type: application/zip
+      
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: release-macos-latest-arm64.zip
+          asset_name: release-macos-latest-arm64.zip
+          asset_content_type: application/zip
