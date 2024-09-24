@@ -31,7 +31,7 @@ jobs:
     - name: Build with PyInstaller
       run: |
         if [ "${{ matrix.os }}" == "macos-latest" ]; then
-          CFLAGS="-arch ${{ matrix.architecture }}" LDFLAGS="-arch ${{ matrix.architecture }}" pyinstaller --onefile your_script.py
+          CFLAGS="-arch ${{ matrix.architecture }}" LDFLAGS="-arch ${{ matrix.architecture }}" bash setup.sh build
         else
           bash setup.sh build
         fi
