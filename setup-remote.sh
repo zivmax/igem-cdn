@@ -46,10 +46,12 @@ install_program() {
         chmod +x "$INSTALL_PATH/$PROGRAM_NAME"
     fi
 
-    rm -rf "$PROGRAM_DIR"
-    mkdir -p "$PROGRAM_DIR"
-    mv igem-cdn-config.json "$PROGRAM_DIR/config.json"
-    
+    if [[ ! -f "$PROGRAM_DIR/config.json" || -f "igem-cdn-config.json" ]]; then
+        rm -rf "$PROGRAM_DIR"
+        mkdir -p "$PROGRAM_DIR"
+        mv igem-cdn-config.json "$PROGRAM_DIR/config.json"
+    fi
+
     ensure_path
     echo "iGEM CDN Tool installed successfully!"
     echo "Please restart your terminal."
