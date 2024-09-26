@@ -89,11 +89,15 @@ jobs:
   
       - name: Zip Artifacts
         run: |
-          for file in ./artifacts/*; do
-            filename=$(basename "$file")
-            zip -r "${filename}.zip" "$file"
+          for dir in ./artifacts/*; do
+            if [ -d "$dir" ]; then
+              filename=$(basename "$dir")
+              cd "$dir"
+              zip -r "../${filename}.zip" ./*
+              cd -
+            fi
           done
-
+      
 
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
