@@ -97,6 +97,7 @@ jobs:
               cd -
             fi
           done
+          mv ./artifacts/*.zip ./
       
 
       - name: Upload Release Asset
