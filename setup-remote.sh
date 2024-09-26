@@ -68,18 +68,24 @@ uninstall_program() {
 get_program() {
     ARCH=$(uname -m)
     if [[ "$OSTYPE" == "darwin"* ]]; then
+        echo "Detected MacOS"
         if [[ "$ARCH" == "arm64" ]]; then
+            echo "Detected Apple Silicon"
             DOWNLOAD_URL="https://github.com/zivmax/igem-cdn/releases/download/latest/release-macos-latest-arm64.zip"
         elif [[ "$ARCH" == "x86_64" ]]; then
+            echo "Detected Intel"
             DOWNLOAD_URL="https://github.com/zivmax/igem-cdn/releases/download/latest/release-macos-13-x86_64.zip"
         else
             echo "Unsupported architecture: $ARCH"
             exit 1
         fi
     else
+        echo "Detected Linux"
         if [[ "$ARCH" == "aarch64" ]]; then
+            echo "Detected ARM64"
             DOWNLOAD_URL="https://github.com/zivmax/igem-cdn/releases/download/latest/release-ubuntu-latest-arm64.zip"
         elif [[ "$ARCH" == "x86_64" ]]; then
+            echo "Detected x86_64"
             DOWNLOAD_URL="https://github.com/zivmax/igem-cdn/releases/download/latest/release-ubuntu-latest-x86_64.zip"
         else
             echo "Unsupported architecture: $ARCH"
