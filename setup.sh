@@ -23,15 +23,27 @@ ensure_path() {
 
 install_program() {
     ensure_install_path
+
+    local is_update=false
+    if [ -f "$INSTALL_PATH/$PROGRAM_NAME" ]; then
+        is_update=true
+    fi
+
     rm -rf $INSTALL_PATH/$PROGRAM_NAME
     rm -rf $PROGRAM_DIR
     cp ./dist/$PROGRAM_NAME $INSTALL_PATH/$PROGRAM_NAME
     mkdir $PROGRAM_DIR
     cp config.json $PROGRAM_DIR/config.json
     chmod +x $INSTALL_PATH/$PROGRAM_NAME
+    
     ensure_path
+
     echo "iGEM CDN Tool installed successfully!"
-    echo "Please restart your terminal."
+    if [ "$is_update" = false ]; then
+        echo "Please restart your terminal."
+    else
+        echo "This is a update, no need to restart your terminal."
+    fi
 }
 
 uninstall_program() {
