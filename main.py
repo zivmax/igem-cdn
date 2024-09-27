@@ -2,16 +2,44 @@ import os
 import argparse
 import json
 from src.uploads import Session
+import re
 
 local_root = ""
 
 
+def is_file_path(path: str) -> bool:
+    # This regex checks if the path ends with a common file extension
+    file_pattern = re.compile(r".+\.[a-zA-Z0-9]{1,5}$")
+    return bool(file_pattern.match(path))
+
+
+def is_dir_path(path: str) -> bool:
+    # This regex checks if the path ends with a slash or has no file extension
+    directory_pattern = re.compile(r".+/$|^[^\.]+$")
+    return bool(directory_pattern.match(path))
+
+
+def handle_missing(path: str) -> None:
+    # If no server directory, create one
+    if not os.path.exists(local_root):
+        os.makedirs(local_root)
+
+    if not os.path.exists(os.path.join(local_root, path)):
+        if is_dir_path(os.path.join(local_root, path)):
+            os.makedirs(os.path.join(local_root + path))
+        elif is_file_path(os.path.join(local_root + path)):
+            # Create a empty new file, add text in it to prompt user
+            # that seeing the prompt means request failed.
+            with open(os.path.join(local_root + path), "w") as f:
+                f.write("Request failed. Please try again.")
+
+
 def delete(client: Session, remote_path: str) -> None:
-    if os.path.isfile(local_root + remote_path):
+    if is_file_path(local_root + remote_path):
         dir_path = os.path.dirname(remote_path)
         file_name = os.path.basename(remote_path)
         client.delete_file(file_name, dir_path, True)
-    elif os.path.isdir(local_root + remote_path):
+    elif is_dir_path(local_root + remote_path):
         client.delete_dir(remote_path, True)
     else:
         print(f"Error: 'server/{remote_path}' does not exist.")
@@ -25,8 +53,11 @@ def sync_work_dir(client: Session, local_work_dir: str, remote_work_dir: str) ->
 
 def download(client: Session, remote_path: str) -> None:
     """Download from remote without overwriting check."""
+    handle_missing(remote_path)
     if os.path.isfile(local_root + remote_path):
-        client.download_file(remote_path, os.path.dirname(remote_path), True)
+        client.download_file(
+            remote_path, os.path.dirname(local_root + remote_path), True
+        )
     elif os.path.isdir(local_root + remote_path):
         client.download_dir(remote_path, True)
     else:
@@ -58,6 +89,7 @@ def get_default_remote_path(local_path):
     """Calculates the default remote directory based on the local root."""
     rel = os.path.relpath(local_path, local_root)
     return rel if rel != "." else ""
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(
@@ -105,14 +137,6 @@ def main() -> None:
 
     client = Session()
     client.login(username, password)
-
-    # If no server directory, create one
-    if not os.path.exists(local_root):
-        os.makedirs(local_root)
-
-    if not os.path.exists(os.path.join(local_root, remote_path)):
-        if os.path.isdir(os.path.join(local_root, remote_path)):
-            os.makedirs(os.path.join(local_root + remote_path))
 
     match args.action:
         case "delete":
