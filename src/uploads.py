@@ -451,7 +451,7 @@ class Session:
             print(f"Request failed: {e}")
             exit(1)
 
-    def download_dir(self, directory: str = "", recursive: bool = False) -> None:
+    def download_dir(self, remote_dir: str = "", target_dir: str = "server", recursive: bool = False) -> None:
         """Download a directory and its subdirectories to the local file system."""
 
         def collect_files(directory, recursive):
@@ -474,15 +474,15 @@ class Session:
             return file_list
 
         self.successful_downloads = 0
-        self.query(directory)
-        all_files = collect_files(directory, recursive)
+        self.query(remote_dir)
+        all_files = collect_files(remote_dir, recursive)
 
         if not all_files:
-            print(f"Directory '{directory}' is empty")
+            print(f"Directory '{remote_dir}' is empty")
             return
 
-        for _, dir_path in all_files:
-            local_target_directory = f"server/{dir_path}"
+        for file_url, dir_path in all_files:
+            local_target_directory = f"{target_dir}/{dir_path}"
             os.makedirs(local_target_directory, exist_ok=True)
 
         # Create a lock for thread-safe updates
@@ -501,7 +501,7 @@ class Session:
         with tqdm(total=len(all_files), desc="Downloading files", unit="file") as pbar:
             threads = []
             for file_url, dir_path in all_files:
-                local_target_directory = f"server/{dir_path}"
+                local_target_directory = f"{target_dir}/{dir_path}"
                 thread = threading.Thread(
                     target=thread_download,
                     args=(file_url, local_target_directory),
@@ -512,5 +512,5 @@ class Session:
             for thread in threads:
                 thread.join()
 
-        directory = directory if directory != "" else "/"
-        print(f"Downloaded {self.successful_downloads} files in '{os.path.join(directory, "")}'\n")
+        remote_dir = remote_dir if remote_dir != "" else "/"
+        print(f"Downloaded {self.successful_downloads} files in '{os.path.join(remote_dir, "")}'\n")

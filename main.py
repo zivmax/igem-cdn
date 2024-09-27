@@ -59,7 +59,7 @@ def download(client: Session, remote_path: str) -> None:
             remote_path, os.path.dirname(local_root + remote_path), True
         )
     elif os.path.isdir(local_root + remote_path):
-        client.download_dir(remote_path, True)
+        client.download_dir(remote_path, local_root, True)
     else:
         print(f"Error: 'server/{remote_path}' does not exist.")
 
@@ -131,9 +131,9 @@ def main() -> None:
     # Calculate default remote_path if not provided
     if remote_path is None:
         remote_path = get_default_remote_path(local_path)
-
     else:
         remote_path = remote_path.replace("server/", "")
+        remote_path = remote_path.replace("server", "")
 
     client = Session()
     client.login(username, password)
