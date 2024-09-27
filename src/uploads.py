@@ -13,7 +13,7 @@ NOT_LOGGED_IN = 0
 LOGGED_IN = 1
 LOGIN_FAILED = -1
 TIMEOUT = 30
-
+STATIC_URL_PREFIX = "https://static.igem.wiki/teams/"
 
 def check_parameter(directory: str) -> None:
     """Check if the directory parameter is valid.
@@ -38,6 +38,7 @@ class Session:
         self.client = httpx.Client(http2=True)
         self.status = NOT_LOGGED_IN
         self.team_id = ""
+        self.url = ""
 
     def _request(
         self,
@@ -133,6 +134,7 @@ class Session:
             else:
                 self.status = LOGGED_IN
                 self.team_id = self._request_team_id()
+                self.url = STATIC_URL_PREFIX + str(self.team_id) + '/'
 
         except httpx.HTTPStatusError as http_err:
             self.status = LOGIN_FAILED
@@ -408,6 +410,8 @@ class Session:
         Returns:
             bool: True if the download was successful, False otherwise.
         """
+        if not file_url.startswith(STATIC_URL_PREFIX):
+            file_url = self.url + file_url
         file_name = os.path.basename(file_url)  # get file name from url
         file_path = os.path.join(target_dir, file_name)  # local file path
 
