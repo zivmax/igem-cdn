@@ -64,7 +64,7 @@ install_program() {
     if [ "$is_update" = false ]; then
         echo "Please restart your terminal."
     else
-        echo "This is a update, no need to restart your terminal."
+        echo "This is an update, no need to restart your terminal."
     fi
 }
 
