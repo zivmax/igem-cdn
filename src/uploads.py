@@ -388,6 +388,10 @@ class Session:
                     stack.append(os.path.join(current_dir, item["Name"]))
 
         # Process all items with a single progress bar
+        # Filter out folders if not recursive
+        if not recursive:
+            all_items = [(current_dir, item) for current_dir, item in all_items if item["Type"] != "Folder"]
+
         with tqdm(
             total=len(all_items), desc="Deleting directory", unit="item"
         ) as pbar:

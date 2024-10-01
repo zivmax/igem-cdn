@@ -36,14 +36,14 @@ def handle_missing(path: str) -> None:
 
 
 def delete(client: Session, remote_path: str) -> None:
-    if is_file_path(local_root + remote_path):
+    if is_file_path(os.path.join(local_root, remote_path)):
         dir_path = os.path.dirname(remote_path)
         file_name = os.path.basename(remote_path)
         client.delete_file(file_name, dir_path, True)
-    elif os.path.isdir(local_root + remote_path):
+    elif os.path.isdir(os.path.join(local_root, remote_path)):
         client.delete_dir(remote_path, args.recursive)
     else:
-        print(f"Error: 'server/{remote_path}' does not exist.")
+        print(f"Error: '{os.path.join(local_root, remote_path)}' does not exist.")
 
 
 def sync_work_dir(client: Session, local_work_dir: str, remote_work_dir: str) -> None:
@@ -55,14 +55,14 @@ def sync_work_dir(client: Session, local_work_dir: str, remote_work_dir: str) ->
 def download(client: Session, remote_path: str) -> None:
     """Download from remote without overwriting check."""
     handle_missing(remote_path)
-    if os.path.isfile(local_root + remote_path):
+    if os.path.isfile(os.path.join(local_root, remote_path)):
         client.download_file(
-            remote_path, os.path.dirname(local_root + remote_path), True
+            remote_path, os.path.dirname(os.path.join(local_root, remote_path)), True
         )
-    elif os.path.isdir(local_root + remote_path):
+    elif os.path.isdir(os.path.join(local_root, remote_path)):
         client.download_dir(remote_path, local_root, args.recursive)
     else:
-        print(f"Error: 'server/{remote_path}' does not exist.")
+        print(f"Error: '{os.path.join(local_root, remote_path)}' does not exist.")
 
 
 def upload(client: Session, local_path: str, remote_path: str) -> None:
@@ -72,7 +72,7 @@ def upload(client: Session, local_path: str, remote_path: str) -> None:
     elif os.path.isdir(local_path):
         client.upload_dir(local_path, remote_path, args.recursive)
     else:
-        print(f"Error: 'server/{remote_path}' does not exist.")
+        print(f"Error: '{os.path.join(local_root, remote_path)}' does not exist.")
 
 
 def load_config(config_path="config.json") -> dict:
