@@ -36,6 +36,12 @@ ensure_path() {
 
 install_program() {
     ensure_install_path
+    
+    local is_update=false
+    if [ -f "$INSTALL_PATH/$PROGRAM_NAME" ]; then
+        is_update=true
+    fi
+
     if [[ "$OSTYPE" == "darwin"* ]]; then
         sudo rm -rf "$INSTALL_PATH/$PROGRAM_NAME"
         sudo mv "$PROGRAM_NAME" "$INSTALL_PATH/$PROGRAM_NAME"
@@ -53,8 +59,13 @@ install_program() {
     fi
 
     ensure_path
+
     echo "iGEM CDN Tool installed successfully!"
-    echo "Please restart your terminal."
+    if [ "$is_update" = false ]; then
+        echo "Please restart your terminal."
+    else
+        echo "This is a update, no need to restart your terminal."
+    fi
 }
 
 uninstall_program() {
