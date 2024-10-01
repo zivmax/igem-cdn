@@ -4,6 +4,7 @@ import json
 from src.uploads import Session
 
 local_root = ""
+args = None
 
 
 def delete(client: Session, remote_path: str) -> None:
@@ -12,7 +13,7 @@ def delete(client: Session, remote_path: str) -> None:
         file_name = os.path.basename(remote_path)
         client.delete_file(file_name, dir_path, True)
     elif os.path.isdir(local_root + remote_path):
-        client.delete_dir(remote_path, True)
+        client.delete_dir(remote_path, args.recursive)
     else:
         print(f"Error: 'server/{remote_path}' does not exist.")
 
@@ -28,7 +29,7 @@ def download(client: Session, remote_path: str) -> None:
     if os.path.isfile(local_root + remote_path):
         client.download_file(remote_path, os.path.dirname(remote_path), True)
     elif os.path.isdir(local_root + remote_path):
-        client.download_dir(remote_path, True)
+        client.download_dir(remote_path, args.recursive)
     else:
         print(f"Error: 'server/{remote_path}' does not exist.")
 
@@ -38,7 +39,7 @@ def upload(client: Session, local_path: str, remote_path: str) -> None:
     if os.path.isfile(local_path):
         client.upload_file(local_path, os.path.dirname(remote_path), True)
     elif os.path.isdir(local_path):
-        client.upload_dir(local_path, remote_path, True)
+        client.upload_dir(local_path, remote_path, args.recursive)
     else:
         print(f"Error: 'server/{remote_path}' does not exist.")
 
@@ -59,6 +60,7 @@ def get_default_remote_path(local_path):
     rel = os.path.relpath(local_path, local_root)
     return rel if rel != "." else ""
 
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="iGEM CDN File and Directory Management CLI"
@@ -71,7 +73,14 @@ def main() -> None:
     parser.add_argument("local_path", help="Local path")
     parser.add_argument("-rp", "--remote-path", help="Remote path")
     parser.add_argument("--config", help="Path to the configuration file")
+    parser.add_argument(
+        "-r",
+        "--recursive",
+        action="store_true",
+        help="Recursively upload/download directories",
+    )
 
+    global args
     args = parser.parse_args()
 
     config = args.config
