@@ -27,11 +27,11 @@ def handle_missing(path: str) -> None:
 
     if not os.path.exists(os.path.join(local_root, path)):
         if is_dir_path(os.path.join(local_root, path)):
-            os.makedirs(os.path.join(local_root + path))
-        elif is_file_path(os.path.join(local_root + path)):
+            os.makedirs(os.path.join(local_root, path))
+        elif is_file_path(os.path.join(local_root, path)):
             # Create a empty new file, add text in it to prompt user
             # that seeing the prompt means request failed.
-            with open(os.path.join(local_root + path), "w") as f:
+            with open(os.path.join(local_root, path), "w") as f:
                 f.write("Request failed. Please try again.")
 
 
