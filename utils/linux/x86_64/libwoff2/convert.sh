@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # Specify the path to the woff2_compress binary if it's not in your PATH
-WOFF2_COMPRESS_PATH="/home/zivmax/igem-wiki/assets/utils/libwoff2/woff2_compress"
+WOFF2_COMPRESS_PATH="./cwoff2"
 
 # Check if the woff2_compress binary exists
 if [ ! -f "$WOFF2_COMPRESS_PATH" ]; then
-    echo "woff2_compress not found at $WOFF2_COMPRESS_PATH"
+    echo "cwoff2 not found at $WOFF2_COMPRESS_PATH"
     exit 1
 fi
 
